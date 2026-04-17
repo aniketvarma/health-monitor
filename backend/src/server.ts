@@ -17,6 +17,11 @@ const signupSchema = z.object({
   password: z.string().min(6).max(100),
 });
 
+const loginschema = z.object({
+  email: z.email(),
+  password: z.string().min(6).max(100),
+});
+
 // create the app instance
 const app = express();
 app.use(cors());
@@ -58,6 +63,32 @@ app.post("/api/auth/signup", async (req, res) => {
 
 app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body;
+
+  const user = loginschema.safeParse({ email, password });
+
+  if (!user.success) {
+    return res.status(400).json({ error: z.flattenError(user.error) });
+  }
+
+  const dbuser = await db.oneOrNone(`SELECT * FROM users WHERE email = $1`, [
+    email,
+  ]);
+  if (dbuser === null) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+
+  const passwordMatch = await bcrypt.compare(password, dbuser.password);
+  if (!passwordMatch) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+
+  const token = jwt.sign(
+    { id: dbuser.id, email: dbuser.email, role: dbuser.role },
+    process.env.JWT_SECRET!,
+    { expiresIn: "7d" },
+  );
+
+  res.json({ token: token });
 });
 
 // start the server

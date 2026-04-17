@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    // strict type checking, no implicit `any`
+    "strict": true,
+
+    //  project uses ES modules ("type": "module" in package.json)
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+
+    // target modern Node.js
+    "target": "ES2022",
+
+    // allows importing .js extensions (like your `./db.js` import)
+    "allowImportingTsExtensions": true,
+
+    //  use tsx to run directly, so no need to emit compiled JS files
+    "noEmit": true,
+
+    // lets you import CommonJS packages (express, cors, etc.) with `import x from "x"`
+    "esModuleInterop": true,
+
+    // catches more bugs — like unused variables, unreachable code
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  // only check  source code, not node_modules
+  "include": ["src"]
+}

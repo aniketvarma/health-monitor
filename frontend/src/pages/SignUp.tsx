@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SignUp() {
   const [name, setName] = useState("");
@@ -85,6 +85,9 @@ export default function SignUp() {
           <p className={success ? "text-green-500" : "text-red-500"}>
             {message}
           </p>
+          <Link to="/login" className="text-blue-500 mt-4 block">
+            Already have an account? Log in
+          </Link>
         </CardContent>
       </Card>
     </div>

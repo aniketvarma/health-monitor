@@ -23,7 +23,10 @@ export default function Login() {
       body: JSON.stringify(payload),
     });
     if (response.ok) {
-      // Handle successful login (e.g., store token, redirect)
+      console.log("Login successful!");
+      let token = await response.json();
+      localStorage.setItem("token", token.token);
+      console.log("Login successful! Token:", token.token);
     }
   }
 

@@ -9,7 +9,9 @@ import db from "./db.js";
 
 import jwt from "jsonwebtoken";
 
-import { z } from "zod";
+import { safeParse, z } from "zod";
+
+import authenticate from "./middleware/authenticate.ts";
 
 const signupSchema = z.object({
   name: z.string().min(1).max(250),
@@ -20,6 +22,12 @@ const signupSchema = z.object({
 const loginschema = z.object({
   email: z.email(),
   password: z.string().min(6).max(100),
+});
+
+const bpReadingSchema = z.object({
+  systolic: z.number().min(70).max(250),
+  diastolic: z.number().min(40).max(150),
+  pulse: z.number().optional(),
 });
 
 // create the app instance
@@ -83,12 +91,45 @@ app.post("/api/auth/login", async (req, res) => {
   }
 
   const token = jwt.sign(
-    { id: dbuser.id, email: dbuser.email, role: dbuser.role },
+    {
+      id: dbuser.id,
+      name: dbuser.name,
+      email: dbuser.email,
+      role: dbuser.role,
+    },
     process.env.JWT_SECRET!,
     { expiresIn: "7d" },
   );
 
   res.json({ token: token });
+});
+
+// route for bp readings logging
+app.post("/api/bp-readings", authenticate, async (req, res) => {
+  const validationResult = bpReadingSchema.safeParse(req.body);
+
+  if (!validationResult.success) {
+    return res
+      .status(400)
+      .json({ error: z.flattenError(validationResult.error) });
+  }
+
+  const { systolic, diastolic, pulse } = req.body;
+
+  const userId = (req as any).user.id;
+
+  try {
+    db.none(
+      `INSERT INTO bp_readings (user_id, systolic, diastolic, pulse) VALUES ($1, $2, $3, $4)`,
+      [userId, systolic, diastolic, pulse],
+    );
+    res
+      .status(201)
+      .json({ message: "Blood pressure reading logged successfully" });
+  } catch (error) {
+    console.error("Error logging blood pressure reading:", error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
 });
 
 // start the server

@@ -23,10 +23,9 @@ export default function Login() {
       body: JSON.stringify(payload),
     });
     if (response.ok) {
-      console.log("Login successful!");
-      let token = await response.json();
+      const token = await response.json();
       localStorage.setItem("token", token.token);
-      console.log("Login successful! Token:", token.token);
+      navigate("/dashboard");
     }
   }
 

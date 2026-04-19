@@ -7,6 +7,7 @@ import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import LogData from "./pages/LogData";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="calendar" element={<Calendar />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="log" element={<LogData />} />
       </Route>
     </Routes>
   );

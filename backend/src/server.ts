@@ -9,7 +9,7 @@ import db from "./db.js";
 
 import jwt from "jsonwebtoken";
 
-import { safeParse, z } from "zod";
+import { z } from "zod";
 
 import authenticate from "./middleware/authenticate.ts";
 
@@ -28,6 +28,11 @@ const bpReadingSchema = z.object({
   systolic: z.number().min(70).max(250),
   diastolic: z.number().min(40).max(150),
   pulse: z.number().optional(),
+});
+
+const glucoseReadingSchema = z.object({
+  reading: z.number().min(20).max(600),
+  type: z.enum(["fasting", "post_meal"]),
 });
 
 // create the app instance
@@ -114,12 +119,12 @@ app.post("/api/bp-readings", authenticate, async (req, res) => {
       .json({ error: z.flattenError(validationResult.error) });
   }
 
-  const { systolic, diastolic, pulse } = req.body;
+  const { systolic, diastolic, pulse } = validationResult.data;
 
   const userId = (req as any).user.id;
 
   try {
-    db.none(
+    await db.none(
       `INSERT INTO bp_readings (user_id, systolic, diastolic, pulse) VALUES ($1, $2, $3, $4)`,
       [userId, systolic, diastolic, pulse],
     );
@@ -129,6 +134,64 @@ app.post("/api/bp-readings", authenticate, async (req, res) => {
   } catch (error) {
     console.error("Error logging blood pressure reading:", error);
     res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+app.post("/api/glucose-readings", authenticate, async (req, res) => {
+  // validate the request body using zod schema
+  const validationResult = glucoseReadingSchema.safeParse(req.body);
+
+  if (!validationResult.success) {
+    return res
+      .status(400)
+      .json({ error: z.flattenError(validationResult.error) });
+  }
+
+  // extract validated data
+  const { reading, type } = validationResult.data;
+
+  //get user id from the authenticated request
+  const userId = (req as any).user.id;
+
+  // insert the glucose reading into the database and handle potential errors
+  try {
+    await db.none(
+      `INSERT INTO glucose_readings (user_id, reading, type) VALUES ($1, $2, $3)`,
+      [userId, reading, type],
+    );
+    return res
+      .status(201)
+      .json({ message: "Glucose reading logged successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Something went wrong: " + error });
+  }
+});
+
+app.get("/api/bp-readings", authenticate, async (req, res) => {
+  const userId = (req as any).user.id;
+
+  try {
+    const readings = await db.any(
+      `SELECT * FROM bp_readings WHERE user_id =$1 `,
+      [userId],
+    );
+    res.status(200).json({ readings });
+  } catch (error) {
+    res.status(500).json({ error: error });
+  }
+});
+
+app.get("/api/glucose-readings", authenticate, async (req, res) => {
+  const userId = (req as any).user.id;
+
+  try {
+    const readings = await db.any(
+      `SELECT * FROM glucose_readings WHERE user_id = $1 ORDER BY created_at DESC`,
+      [userId],
+    );
+    res.status(200).json({ readings });
+  } catch (error) {
+    res.status(500).json({ error: error });
   }
 });
 

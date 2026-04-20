@@ -2,12 +2,21 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BloodPressureForm from "@/components/forms/BloodPressureForm";
+import GlucoseForm from "@/components/forms/GlucoseForm";
 
 const options = [
-  { id: "blood-pressure", label: "Blood Pressure", description: "Systolic & Diastolic" },
+  {
+    id: "blood-pressure",
+    label: "Blood Pressure",
+    description: "Systolic & Diastolic",
+  },
   { id: "glucose", label: "Glucose", description: "Blood sugar level" },
   { id: "weight", label: "Weight", description: "Body weight" },
-  { id: "blood-test", label: "Blood Test Reports", description: "Upload or enter results" },
+  {
+    id: "blood-test",
+    label: "Blood Test Reports",
+    description: "Upload or enter results",
+  },
 ];
 
 export default function LogData() {
@@ -25,14 +34,22 @@ export default function LogData() {
           </h1>
         </div>
         {selected === "blood-pressure" && <BloodPressureForm />}
-        {selected === "glucose" && (
-          <Card><CardContent className="p-6"><p className="text-muted-foreground">Form coming soon...</p></CardContent></Card>
-        )}
+
+        {selected === "glucose" && <GlucoseForm />}
+
         {selected === "weight" && (
-          <Card><CardContent className="p-6"><p className="text-muted-foreground">Form coming soon...</p></CardContent></Card>
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-muted-foreground">Form coming soon...</p>
+            </CardContent>
+          </Card>
         )}
         {selected === "blood-test" && (
-          <Card><CardContent className="p-6"><p className="text-muted-foreground">Form coming soon...</p></CardContent></Card>
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-muted-foreground">Form coming soon...</p>
+            </CardContent>
+          </Card>
         )}
       </div>
     );
@@ -50,7 +67,9 @@ export default function LogData() {
           >
             <CardContent className="p-6">
               <h2 className="text-lg font-semibold">{option.label}</h2>
-              <p className="text-sm text-muted-foreground">{option.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {option.description}
+              </p>
             </CardContent>
           </Card>
         ))}

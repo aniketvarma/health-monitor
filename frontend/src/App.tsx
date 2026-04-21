@@ -5,7 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Calendar from "./pages/Calendar";
-import Reports from "./pages/Reports";
+import Insights from "./pages/Insights";
 import Settings from "./pages/Settings";
 import LogData from "./pages/LogData";
 
@@ -19,7 +19,7 @@ function App() {
         <Route index element={<Home />} />
         <Route path="profile" element={<Profile />} />
         <Route path="calendar" element={<Calendar />} />
-        <Route path="reports" element={<Reports />} />
+        <Route path="insights" element={<Insights />} />
         <Route path="settings" element={<Settings />} />
         <Route path="log" element={<LogData />} />
       </Route>

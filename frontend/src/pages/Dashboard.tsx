@@ -47,9 +47,9 @@ export default function Dashboard() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={location.pathname === "/dashboard/reports"}
+                  isActive={location.pathname === "/dashboard/insights"}
                 >
-                  <Link to="/dashboard/reports">Reports</Link>
+                  <Link to="/dashboard/insights">Insights</Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>

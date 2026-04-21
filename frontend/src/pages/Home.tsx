@@ -9,7 +9,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-6">
-
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Welcome back, Anike</h1>
         <div className="flex gap-3">
@@ -17,7 +16,7 @@ export default function Home() {
             <Link to="/dashboard/log">Log Data</Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link to="/dashboard/reports">View Reports</Link>
+            <Link to="/dashboard/insights">View Insights</Link>
           </Button>
         </div>
       </div>
@@ -40,7 +39,9 @@ export default function Home() {
             <CardTitle>Recent Logs</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">No logs yet. Start by logging your first entry.</p>
+            <p className="text-muted-foreground">
+              No logs yet. Start by logging your first entry.
+            </p>
           </CardContent>
         </Card>
 
@@ -49,15 +50,10 @@ export default function Home() {
             <CardTitle>Calendar</CardTitle>
           </CardHeader>
           <CardContent>
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-            />
+            <Calendar mode="single" selected={date} onSelect={setDate} />
           </CardContent>
         </Card>
       </div>
-
     </div>
   );
 }

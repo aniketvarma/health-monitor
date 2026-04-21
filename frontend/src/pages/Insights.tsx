@@ -75,7 +75,6 @@ export default function Insights() {
         <TabsTrigger value="bp">Blood Pressure</TabsTrigger>
         <TabsTrigger value="glucose">Glucose</TabsTrigger>
         <TabsTrigger value="weight">Weight</TabsTrigger>
-        <TabsTrigger value="blood-test">Blood Test</TabsTrigger>
       </TabsList>
       <div className="flex space-x-2 mb-4 mt-4">
         <Button
@@ -239,9 +238,6 @@ export default function Insights() {
       </TabsContent>
       <TabsContent value="weight">
         <p>Weight Reports coming soon...</p>
-      </TabsContent>
-      <TabsContent value="blood-test">
-        <p>Blood Test Reports coming soon...</p>
       </TabsContent>
     </Tabs>
   );

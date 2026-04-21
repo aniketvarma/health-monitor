@@ -8,6 +8,7 @@ import Calendar from "./pages/Calendar";
 import Insights from "./pages/Insights";
 import Settings from "./pages/Settings";
 import LogData from "./pages/LogData";
+import ProtectedRoute from "./pages/ProtectedRoute";
 
 function App() {
   return (
@@ -15,13 +16,15 @@ function App() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
-      <Route path="/dashboard" element={<Dashboard />}>
-        <Route index element={<Home />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="calendar" element={<Calendar />} />
-        <Route path="insights" element={<Insights />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="log" element={<LogData />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<Dashboard />}>
+          <Route index element={<Home />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="calendar" element={<Calendar />} />
+          <Route path="insights" element={<Insights />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="log" element={<LogData />} />
+        </Route>
       </Route>
     </Routes>
   );

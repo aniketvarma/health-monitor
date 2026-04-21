@@ -14,7 +14,7 @@ const options = [
   { id: "weight", label: "Weight", description: "Body weight" },
   {
     id: "blood-test",
-    label: "Blood Test Reports",
+    label: "Reports",
     description: "Upload or enter results",
   },
 ];

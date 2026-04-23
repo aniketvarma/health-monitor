@@ -13,6 +13,7 @@ import { z } from "zod";
 
 import authenticate from "./middleware/authenticate.ts";
 import { ca } from "zod/locales";
+import { error } from "node:console";
 
 const signupSchema = z.object({
   name: z.string().min(1).max(250),
@@ -237,6 +238,25 @@ app.get("/api/medicines", authenticate, async (req, res) => {
   }
 });
 
+app.delete("/api/medicines/:id", authenticate, async (req, res) => {
+  const userId = (req as any).user.id;
+  const medicineId = req.params.id;
+  try {
+    const dbResult = await db.oneOrNone(
+      `SELECT * FROM medicines WHERE id=$1 AND user_id=$2`,
+      [medicineId, userId],
+    );
+
+    if (!dbResult) {
+      res.status(404).json({ error: "medicine not found" });
+    } else {
+      await db.none(`DELETE FROM medicines WHERE id =$1`, [medicineId]);
+      res.status(200).json({ message: "Medicine Deleted" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
 // start the server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -63,6 +64,25 @@ export default function Home() {
       setMedicineList([...medicineList, { medicine: newMedicine }]);
       setNewMedicine("");
       setDialogOpen(false);
+    } else if (response.status === 401) {
+      alert("Unauthorized. Please log in again.");
+    } else if (response.status === 400) {
+      alert("Invalid medicine input.");
+    } else if (response.status === 500) {
+      alert("Server error. Please try again later.");
+    }
+  }
+
+  async function handleDeleteMedicine(id: number) {
+    const response = await fetch(`http://localhost:3000/api/medicines/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      setMedicineList(medicineList.filter((medicine) => medicine.id !== id));
     }
   }
 
@@ -91,9 +111,14 @@ export default function Home() {
               <DialogHeader>
                 <DialogTitle>Add Medicine</DialogTitle>
               </DialogHeader>
-              <form className="flex flex-col gap-4" onSubmit={handleAddMedicine}>
+              <form
+                className="flex flex-col gap-4"
+                onSubmit={handleAddMedicine}
+              >
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="medicine">Medicine (name, dose, frequency)</Label>
+                  <Label htmlFor="medicine">
+                    Medicine (name, dose, frequency)
+                  </Label>
                   <Input
                     id="medicine"
                     placeholder="e.g. Paracetamol 500mg 2x daily"
@@ -110,9 +135,14 @@ export default function Home() {
           {medicineList.length === 0 ? (
             <p className="text-muted-foreground">No medicines added yet.</p>
           ) : (
-            <ul className="list-disc list-inside space-y-1">
-              {medicineList.map((med, index) => (
-                <li key={index}>{med.medicine}</li>
+            <ul className="space-y-2">
+              {medicineList.map((med) => (
+                <li key={med.id} className="flex items-center gap-3">
+                  <span>{med.medicine}</span>
+                  <button onClick={() => handleDeleteMedicine(med.id)}>
+                    <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                  </button>
+                </li>
               ))}
             </ul>
           )}

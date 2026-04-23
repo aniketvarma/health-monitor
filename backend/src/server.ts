@@ -12,6 +12,7 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 
 import authenticate from "./middleware/authenticate.ts";
+import { ca } from "zod/locales";
 
 const signupSchema = z.object({
   name: z.string().min(1).max(250),
@@ -33,6 +34,10 @@ const bpReadingSchema = z.object({
 const glucoseReadingSchema = z.object({
   reading: z.number().min(20).max(600),
   type: z.enum(["fasting", "post_meal"]),
+});
+
+const medicineSchema = z.object({
+  medicine: z.string().min(1).max(250),
 });
 
 // create the app instance
@@ -192,6 +197,43 @@ app.get("/api/glucose-readings", authenticate, async (req, res) => {
     res.status(200).json({ readings });
   } catch (error) {
     res.status(500).json({ error: error });
+  }
+});
+
+app.post("/api/medicines", authenticate, async (req, res) => {
+  const validationResult = medicineSchema.safeParse(req.body);
+
+  if (!validationResult.success) {
+    return res
+      .status(400)
+      .json({ error: z.flattenError(validationResult.error) });
+  }
+
+  const userId = (req as any).user.id;
+
+  const medicine = validationResult.data.medicine;
+  try {
+    await db.none(`INSERT INTO medicines (user_id, medicine) VALUES ($1, $2)`, [
+      userId,
+      medicine,
+    ]);
+    res.status(201).json({ message: "Medicine logged successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Something went wrong: " + error });
+  }
+});
+
+app.get("/api/medicines", authenticate, async (req, res) => {
+  const userId = (req as any).user.id;
+
+  try {
+    const medicines = await db.any(
+      `SELECT id, medicine FROM medicines WHERE user_id = $1`,
+      [userId],
+    );
+    res.status(200).json({ medicines: medicines });
+  } catch (error) {
+    res.status(500).json({ error: "Something went wrong: " + error });
   }
 });
 

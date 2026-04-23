@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS medicines (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  medicine VARCHAR(250) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);

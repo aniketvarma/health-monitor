@@ -11,12 +11,6 @@ const options = [
     description: "Systolic & Diastolic",
   },
   { id: "glucose", label: "Glucose", description: "Blood sugar level" },
-  { id: "weight", label: "Weight", description: "Body weight" },
-  {
-    id: "blood-test",
-    label: "Reports",
-    description: "Upload or enter results",
-  },
 ];
 
 export default function LogData() {
@@ -36,21 +30,6 @@ export default function LogData() {
         {selected === "blood-pressure" && <BloodPressureForm />}
 
         {selected === "glucose" && <GlucoseForm />}
-
-        {selected === "weight" && (
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-muted-foreground">Form coming soon...</p>
-            </CardContent>
-          </Card>
-        )}
-        {selected === "blood-test" && (
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-muted-foreground">Form coming soon...</p>
-            </CardContent>
-          </Card>
-        )}
       </div>
     );
   }

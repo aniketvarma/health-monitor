@@ -7,11 +7,21 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarProvider,
+  SidebarTrigger,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 export default function Dashboard() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    localStorage.removeItem("token");
+    navigate("/login");
+  }
 
   return (
     <SidebarProvider>
@@ -63,9 +73,16 @@ export default function Dashboard() {
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
+        <SidebarFooter>
+          <Button variant="outline" size="sm" className="w-fit" onClick={handleLogout}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        </SidebarFooter>
       </Sidebar>
 
       <main className="flex-1 p-6">
+        <SidebarTrigger className="mb-4" />
         <Outlet />
       </main>
     </SidebarProvider>

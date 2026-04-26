@@ -12,8 +12,10 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 
 import authenticate from "./middleware/authenticate.ts";
-import { ca } from "zod/locales";
-import { error } from "node:console";
+import crypto from "crypto";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const signupSchema = z.object({
   name: z.string().min(1).max(250),
@@ -39,6 +41,15 @@ const glucoseReadingSchema = z.object({
 
 const medicineSchema = z.object({
   medicine: z.string().min(1).max(250),
+});
+
+const ForgotPasswordSchema = z.object({
+  email: z.email(),
+});
+
+const ResetpasswordSchema = z.object({
+  newPassword: z.string(),
+  token: z.string(),
 });
 
 // create the app instance
@@ -253,6 +264,95 @@ app.delete("/api/medicines/:id", authenticate, async (req, res) => {
       await db.none(`DELETE FROM medicines WHERE id =$1`, [medicineId]);
       res.status(200).json({ message: "Medicine Deleted" });
     }
+  } catch (error) {
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+app.post("/api/auth/forgot-password", async (req, res) => {
+  console.log("request recieved");
+  const validationResult = ForgotPasswordSchema.safeParse(req.body);
+  console.log("validation result:", validationResult.success);
+
+  if (!validationResult.success) {
+    return res.status(400).json({ error: "invalid username" });
+  }
+
+  console.log("validation result:", validationResult.success);
+
+  const userEmail = validationResult.data.email;
+
+  const user = await db.oneOrNone(`SELECT * FROM users WHERE email= $1`, [
+    userEmail,
+  ]);
+
+  if (!user) {
+    console.log("No user found for:", userEmail);
+    return res
+      .status(200)
+      .json({ message: "If this email exists, a reset link has been sent." });
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+  console.log("Token generated:", token);
+
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+  try {
+    await db.none(
+      `INSERT INTO password_reset_tokens (email, token, expires_at) VALUES ($1, $2, $3)`,
+      [userEmail, token, expiresAt],
+    );
+    console.log("Sending email to:", userEmail);
+    await resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: userEmail,
+      subject: "Reset your password",
+      html: `<p>Click the link to reset your password:</p>
+         <a href="http://localhost:5173/reset-password/${token}">Reset Password</a>
+         <p>This link expires in 15 minutes.</p>`,
+    });
+    return res
+      .status(200)
+      .json({ message: "If this email exists, a reset link has been sent." });
+  } catch (error) {
+    res.status(500).json({ error: "something went wrong" });
+  }
+});
+
+app.post("/api/auth/reset-password", async (req, res) => {
+  const validationResult = ResetpasswordSchema.safeParse(req.body);
+
+  if (!validationResult.success) {
+    return res.status(400).json({ error: "inavlid input" });
+  }
+  console.log("validation  complete");
+
+  const { newPassword, token } = validationResult.data;
+
+  try {
+    const tokenRow = await db.oneOrNone(
+      `SELECT * FROM password_reset_tokens WHERE token=$1 AND expires_at > NOW()`,
+      [token],
+    );
+    console.log("token row fetched ", tokenRow);
+
+    if (!tokenRow) {
+      return res.status(400).json({ error: "Invalid or expired reset link." });
+    }
+
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await db.none(`UPDATE users SET password = $1 WHERE email=$2`, [
+      newHashedPassword,
+      tokenRow.email,
+    ]);
+
+    console.log("password upadted in db");
+
+    await db.none(`DELETE FROM password_reset_tokens WHERE token=$1`, [token]);
+    console.log("token row has been deleted");
+    res.status(200).json({ message: "password reset successfull" });
   } catch (error) {
     res.status(500).json({ error: "Something went wrong" });
   }

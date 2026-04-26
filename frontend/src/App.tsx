@@ -9,6 +9,7 @@ import Insights from "./pages/Insights";
 import Settings from "./pages/Settings";
 import LogData from "./pages/LogData";
 import ProtectedRoute from "./pages/ProtectedRoute";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<Home />} />

@@ -148,28 +148,6 @@ export default function Home() {
           )}
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Logs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              No logs yet. Start by logging your first entry.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Calendar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Calendar mode="single" selected={date} onSelect={setDate} />
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

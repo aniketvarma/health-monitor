@@ -270,15 +270,15 @@ app.delete("/api/medicines/:id", authenticate, async (req, res) => {
 });
 
 app.post("/api/auth/forgot-password", async (req, res) => {
-  console.log("request recieved");
+
   const validationResult = ForgotPasswordSchema.safeParse(req.body);
-  console.log("validation result:", validationResult.success);
+
 
   if (!validationResult.success) {
     return res.status(400).json({ error: "invalid username" });
   }
 
-  console.log("validation result:", validationResult.success);
+
 
   const userEmail = validationResult.data.email;
 
@@ -287,14 +287,14 @@ app.post("/api/auth/forgot-password", async (req, res) => {
   ]);
 
   if (!user) {
-    console.log("No user found for:", userEmail);
+
     return res
       .status(200)
       .json({ message: "If this email exists, a reset link has been sent." });
   }
 
   const token = crypto.randomBytes(32).toString("hex");
-  console.log("Token generated:", token);
+
 
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -303,7 +303,7 @@ app.post("/api/auth/forgot-password", async (req, res) => {
       `INSERT INTO password_reset_tokens (email, token, expires_at) VALUES ($1, $2, $3)`,
       [userEmail, token, expiresAt],
     );
-    console.log("Sending email to:", userEmail);
+
     await resend.emails.send({
       from: "onboarding@resend.dev",
       to: userEmail,
@@ -326,7 +326,7 @@ app.post("/api/auth/reset-password", async (req, res) => {
   if (!validationResult.success) {
     return res.status(400).json({ error: "inavlid input" });
   }
-  console.log("validation  complete");
+
 
   const { newPassword, token } = validationResult.data;
 
@@ -335,7 +335,7 @@ app.post("/api/auth/reset-password", async (req, res) => {
       `SELECT * FROM password_reset_tokens WHERE token=$1 AND expires_at > NOW()`,
       [token],
     );
-    console.log("token row fetched ", tokenRow);
+
 
     if (!tokenRow) {
       return res.status(400).json({ error: "Invalid or expired reset link." });
@@ -348,10 +348,10 @@ app.post("/api/auth/reset-password", async (req, res) => {
       tokenRow.email,
     ]);
 
-    console.log("password upadted in db");
+
 
     await db.none(`DELETE FROM password_reset_tokens WHERE token=$1`, [token]);
-    console.log("token row has been deleted");
+
     res.status(200).json({ message: "password reset successfull" });
   } catch (error) {
     res.status(500).json({ error: "Something went wrong" });

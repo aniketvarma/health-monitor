@@ -14,7 +14,7 @@ export default function ResetPassword() {
 
   async function handleResetPassword(e) {
     e.preventDefault();
-    console.log("Submit clicked, passwords:", newPassword, confirmPassword);
+
     if (newPassword !== confirmPassword) {
       alert("Password do not match");
 
@@ -30,7 +30,7 @@ export default function ResetPassword() {
         body: JSON.stringify({ newPassword, token }),
       },
     );
-    console.log("Response status:", response.status);
+
 
     if (response.ok) {
       alert("Password Reset Successfull");

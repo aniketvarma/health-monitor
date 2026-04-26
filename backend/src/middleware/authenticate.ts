@@ -14,7 +14,7 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {
     userInformation = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
   } catch (error) {
-    console.log("token verification error:", error);
+
     return res.status(401).json({ error: "Invalid token" });
   }
 

@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -18,35 +19,35 @@ export default function ResetPassword() {
     e.preventDefault();
     console.log("Submit clicked, passwords:", newPassword, confirmPassword);
     if (newPassword !== confirmPassword) {
-      alert("Password do not match");
+      toast.error("Password do not match");
 
       return;
     }
-    const response = await fetch(`${API}/api/auth/reset-password`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ newPassword, token }),
+    const response = await fetch(`${API}/api/auth/reset-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
-    console.log("Response status:", response.status);
+      body: JSON.stringify({ newPassword, token }),
+    });
 
     if (response.ok) {
-      alert("Password Reset Successfull");
+      toast.success("Password Reset Successfull");
       navigate("/login");
     } else if (response.status === 400) {
-      alert("Failed to reset password. The link may be expired.");
+      toast.error("Failed to reset password. The link may be expired.");
     } else {
-      alert("something went wrong");
+      toast.error("something went wrong");
     }
   }
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Reset Password</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 px-4">
+      <Card className="w-full max-w-sm shadow-lg border-0 mx-auto">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+            KinLog
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">Reset your password</p>
         </CardHeader>
         <CardContent>
           <form className="flex flex-col gap-4" onSubmit={handleResetPassword}>

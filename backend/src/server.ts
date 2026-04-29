@@ -1,3 +1,7 @@
+// load .env before anything else
+import dotenv from "dotenv";
+dotenv.config();
+
 // import express
 import express from "express";
 // import cors
@@ -84,30 +88,35 @@ app.post("/api/auth/login", async (req, res) => {
     return res.status(400).json({ error: z.flattenError(user.error) });
   }
 
-  const dbuser = await db.oneOrNone(`SELECT * FROM users WHERE email = $1`, [
-    email,
-  ]);
-  if (dbuser === null) {
-    return res.status(401).json({ error: "Invalid credentials" });
+  try {
+    const dbuser = await db.oneOrNone(`SELECT * FROM users WHERE email = $1`, [
+      email,
+    ]);
+    if (dbuser === null) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, dbuser.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      {
+        id: dbuser.id,
+        name: dbuser.name,
+        email: dbuser.email,
+        role: dbuser.role,
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: "7d" },
+    );
+
+    res.json({ token: token });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Something went wrong" });
   }
-
-  const passwordMatch = await bcrypt.compare(password, dbuser.password);
-  if (!passwordMatch) {
-    return res.status(401).json({ error: "Invalid credentials" });
-  }
-
-  const token = jwt.sign(
-    {
-      id: dbuser.id,
-      name: dbuser.name,
-      email: dbuser.email,
-      role: dbuser.role,
-    },
-    process.env.JWT_SECRET!,
-    { expiresIn: "7d" },
-  );
-
-  res.json({ token: token });
 });
 
 // route for bp readings logging

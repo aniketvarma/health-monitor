@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -34,39 +35,46 @@ export default function Login() {
       body: JSON.stringify(payload),
     });
     if (response.ok) {
-      const token = await response.json();
-      localStorage.setItem("token", token.token);
+      const data = await response.json();
+      localStorage.setItem("token", data.token);
       navigate("/dashboard");
+    } else if (response.status === 400) {
+      toast.error("Please enter a valid email and password");
+    } else if (response.status === 401) {
+      toast.error("Invalid credentials");
     } else {
-      alert("Invalid Credentials");
+      toast.error("Something went wrong. Try again.");
     }
   }
 
   async function handleForgetPassword(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const response = await fetch(`${API}/api/auth/forgot-password`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: emailForPasswordReset }),
+    const response = await fetch(`${API}/api/auth/forgot-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({ email: emailForPasswordReset }),
+    });
 
     if (response.ok) {
       setResetDialog(false);
-      alert("If this email exists, a reset link has been sent.");
+      toast.success("If this email exists, a reset link has been sent.");
     } else {
-      alert("Something went wrong. Please try again.");
+      toast.success("Something went wrong. Please try again.");
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 px-4">
+      <Card className="w-full max-w-sm shadow-lg border-0 mx-auto">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+            KinLog
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Sign in to your account
+          </p>
         </CardHeader>
         <CardContent>
           <form className="flex flex-col gap-4" onSubmit={handleLogin}>

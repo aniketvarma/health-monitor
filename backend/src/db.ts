@@ -1,7 +1,3 @@
-// load .env file into process.env
-import dotenv from "dotenv";
-dotenv.config(); // reads backend/.env automatically
-
 // import pg-promise
 import pgPromise from "pg-promise";
 

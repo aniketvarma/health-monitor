@@ -54,7 +54,17 @@ const ResetpasswordSchema = z.object({
 
 // create the app instance
 const app = express();
-app.use(cors());
+
+const allowedOrigins = [
+  "http://localhost:5173", // local dev
+  process.env.FRONT_END_URL!,
+];
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+);
 
 //telling the app to use json middleware to parse incoming JSON requests
 app.use(express.json());

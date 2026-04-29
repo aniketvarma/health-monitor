@@ -13,6 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+const API = import.meta.env.VITE_API_URL;
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +26,7 @@ export default function Login() {
     e.preventDefault();
     const payload = { email, password };
 
-    const response = await fetch("http://localhost:3000/api/auth/login", {
+    const response = await fetch(`${API}/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -35,13 +37,14 @@ export default function Login() {
       const token = await response.json();
       localStorage.setItem("token", token.token);
       navigate("/dashboard");
+    } else {
+      alert("Invalid Credentials");
     }
   }
 
   async function handleForgetPassword(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const response = await fetch(
-      "http://localhost:3000/api/auth/forgot-password",
+    const response = await fetch(`${API}/api/auth/forgot-password`,
       {
         method: "POST",
         headers: {

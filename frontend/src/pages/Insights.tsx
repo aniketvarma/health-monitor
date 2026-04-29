@@ -20,6 +20,8 @@ import {
   CartesianGrid,
 } from "recharts";
 
+const API = import.meta.env.VITE_API_URL;
+
 export default function Insights() {
   const [view, setView] = useState("table");
   const [bpReadings, setBpReadings] = useState<any[]>([]);
@@ -27,7 +29,7 @@ export default function Insights() {
 
   useEffect(() => {
     async function fetchReadings() {
-      const response = await fetch("http://localhost:3000/api/bp-readings", {
+      const response = await fetch(`${API}/api/bp-readings`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -42,8 +44,7 @@ export default function Insights() {
         alert("Unauthorized. Please log in again.");
       }
 
-      const response2 = await fetch(
-        "http://localhost:3000/api/glucose-readings",
+      const response2 = await fetch(`${API}/api/glucose-readings`,
         {
           method: "GET",
           headers: {

@@ -14,6 +14,8 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 
+const API = import.meta.env.VITE_API_URL;
+
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [medicineList, setMedicineList] = useState<any[]>([]);
@@ -26,7 +28,7 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchMedicines() {
-      const response = await fetch("http://localhost:3000/api/medicines", {
+      const response = await fetch(`${API}/api/medicines`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -51,7 +53,7 @@ export default function Home() {
     e.preventDefault();
     if (!newMedicine) return;
 
-    const response = await fetch("http://localhost:3000/api/medicines", {
+    const response = await fetch(`${API}/api/medicines`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -74,7 +76,7 @@ export default function Home() {
   }
 
   async function handleDeleteMedicine(id: number) {
-    const response = await fetch(`http://localhost:3000/api/medicines/${id}`, {
+    const response = await fetch(`${API}/api/medicines/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

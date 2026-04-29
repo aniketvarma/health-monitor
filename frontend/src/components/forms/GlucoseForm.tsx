@@ -4,6 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+const API = import.meta.env.VITE_API_URL;
+
 export default function GlucoseForm() {
   const [reading, setReading] = useState("");
   const [type, setType] = useState<"fasting" | "post_meal">("fasting");
@@ -17,7 +19,7 @@ export default function GlucoseForm() {
 
     const payload = { reading: Number(reading), type: type };
 
-    const response = await fetch("http://localhost:3000/api/glucose-readings", {
+    const response = await fetch(`${API}/api/glucose-readings`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

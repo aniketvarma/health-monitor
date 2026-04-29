@@ -5,6 +5,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+const API = import.meta.env.VITE_API_URL;
+
 export default function SignUp() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,7 +19,7 @@ export default function SignUp() {
     e.preventDefault();
     const payload = { name, email, password };
 
-    const response = await fetch("http://localhost:3000/api/auth/signup", {
+    const response = await fetch(`${API}/api/auth/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

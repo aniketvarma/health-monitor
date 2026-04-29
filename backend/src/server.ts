@@ -11,7 +11,7 @@ import jwt from "jsonwebtoken";
 
 import { z } from "zod";
 
-import authenticate from "./middleware/authenticate.ts";
+import authenticate from "./middleware/authenticate.js";
 import crypto from "crypto";
 import { Resend } from "resend";
 
@@ -59,7 +59,7 @@ app.use(cors());
 //telling the app to use json middleware to parse incoming JSON requests
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 //signup route to handle user registration
 app.post("/api/auth/signup", async (req, res) => {
@@ -270,15 +270,11 @@ app.delete("/api/medicines/:id", authenticate, async (req, res) => {
 });
 
 app.post("/api/auth/forgot-password", async (req, res) => {
-
   const validationResult = ForgotPasswordSchema.safeParse(req.body);
-
 
   if (!validationResult.success) {
     return res.status(400).json({ error: "invalid username" });
   }
-
-
 
   const userEmail = validationResult.data.email;
 
@@ -287,14 +283,12 @@ app.post("/api/auth/forgot-password", async (req, res) => {
   ]);
 
   if (!user) {
-
     return res
       .status(200)
       .json({ message: "If this email exists, a reset link has been sent." });
   }
 
   const token = crypto.randomBytes(32).toString("hex");
-
 
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -327,7 +321,6 @@ app.post("/api/auth/reset-password", async (req, res) => {
     return res.status(400).json({ error: "inavlid input" });
   }
 
-
   const { newPassword, token } = validationResult.data;
 
   try {
@@ -335,7 +328,6 @@ app.post("/api/auth/reset-password", async (req, res) => {
       `SELECT * FROM password_reset_tokens WHERE token=$1 AND expires_at > NOW()`,
       [token],
     );
-
 
     if (!tokenRow) {
       return res.status(400).json({ error: "Invalid or expired reset link." });
@@ -347,8 +339,6 @@ app.post("/api/auth/reset-password", async (req, res) => {
       newHashedPassword,
       tokenRow.email,
     ]);
-
-
 
     await db.none(`DELETE FROM password_reset_tokens WHERE token=$1`, [token]);
 

@@ -10,14 +10,15 @@
     // target modern Node.js
     "target": "ES2022",
 
-    // allows importing .js extensions (like your `./db.js` import)
-    "allowImportingTsExtensions": true,
-
-    //  use tsx to run directly, so no need to emit compiled JS files
-    "noEmit": true,
+    // output compiled JS to dist/ folder
+    "outDir": "dist",
+    "rootDir": "src",
 
     // lets you import CommonJS packages (express, cors, etc.) with `import x from "x"`
     "esModuleInterop": true,
+
+    // skip type-checking node_modules .d.ts files (fixes resend/react type error)
+    "skipLibCheck": true,
 
     // catches more bugs — like unused variables, unreachable code
     "noUnusedLocals": true,
@@ -25,5 +26,6 @@
     "noFallthroughCasesInSwitch": true
   },
   // only check  source code, not node_modules
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["node_modules"]
 }

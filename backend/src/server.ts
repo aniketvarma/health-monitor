@@ -10,47 +10,21 @@ import db from "./db.js";
 import jwt from "jsonwebtoken";
 
 import { z } from "zod";
+import {
+  signupSchema,
+  loginschema,
+  bpReadingSchema,
+  glucoseReadingSchema,
+  medicineSchema,
+  ForgotPasswordSchema,
+  ResetpasswordSchema,
+} from "./schemas.js";
 
 import authenticate from "./middleware/authenticate.js";
 import crypto from "crypto";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-const signupSchema = z.object({
-  name: z.string().min(1).max(250),
-  email: z.email(),
-  password: z.string().min(6).max(100),
-});
-
-const loginschema = z.object({
-  email: z.email(),
-  password: z.string().min(6).max(100),
-});
-
-const bpReadingSchema = z.object({
-  systolic: z.number().min(70).max(250),
-  diastolic: z.number().min(40).max(150),
-  pulse: z.number().optional(),
-});
-
-const glucoseReadingSchema = z.object({
-  reading: z.number().min(20).max(600),
-  type: z.enum(["fasting", "post_meal"]),
-});
-
-const medicineSchema = z.object({
-  medicine: z.string().min(1).max(250),
-});
-
-const ForgotPasswordSchema = z.object({
-  email: z.email(),
-});
-
-const ResetpasswordSchema = z.object({
-  newPassword: z.string(),
-  token: z.string(),
-});
 
 // create the app instance
 const app = express();

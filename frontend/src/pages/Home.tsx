@@ -17,7 +17,6 @@ import { Trash2 } from "lucide-react";
 const API = import.meta.env.VITE_API_URL;
 
 export default function Home() {
-  const [date, setDate] = useState<Date | undefined>(new Date());
   const [medicineList, setMedicineList] = useState<any[]>([]);
   const [newMedicine, setNewMedicine] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);

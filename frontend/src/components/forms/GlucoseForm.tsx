@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +14,7 @@ export default function GlucoseForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (reading === "") {
-      alert("Please enter a glucose reading.");
+      toast.warning("Please enter a glucose reading.");
       return;
     }
 
@@ -29,14 +30,14 @@ export default function GlucoseForm() {
     });
 
     if (response.ok) {
-      alert("Glucose reading saved successfully!");
+      toast.success("Glucose reading saved successfully!");
       setReading("");
     } else if (response.status === 401) {
-      alert("Unauthorized. Please log in again.");
+      toast.error("Unauthorized. Please log in again.");
     } else if (response.status === 400) {
-      alert("Invalid glucose reading.");
+      toast.error("Invalid glucose reading.");
     } else if (response.status === 500) {
-      alert("Server error. Please try again later.");
+      toast.error("Server error. Please try again later.");
     }
   }
 

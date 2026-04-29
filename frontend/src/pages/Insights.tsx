@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Table,
@@ -41,7 +42,7 @@ export default function Insights() {
         const data = await response.json();
         setBpReadings(data.readings);
       } else if (response.status === 401) {
-        alert("Unauthorized. Please log in again.");
+        toast.error("Unauthorized. Please log in again.");
       }
 
       const response2 = await fetch(`${API}/api/glucose-readings`,
@@ -58,7 +59,7 @@ export default function Insights() {
         const data = await response2.json();
         setGlucoseReadings(data.readings);
       } else if (response2.status === 401) {
-        alert("Unauthorized. Please log in again.");
+        toast.error("Unauthorized. Please log in again.");
       }
     }
 

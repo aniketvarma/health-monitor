@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +23,7 @@ export default function BloodPressureForm() {
     };
 
     if (systolic === "" || diastolic === "") {
-      alert("Please fill blood pressure values.");
+      toast.warning("Please fill blood pressure values.");
       return;
     }
 
@@ -36,13 +37,13 @@ export default function BloodPressureForm() {
     });
 
     if (response.ok) {
-      alert("Blood pressure reading logged successfully!");
+      toast.success("Blood pressure reading logged successfully!");
       setSystolic("");
       setDiastolic("");
       setPulse("");
       setBpError("");
     } else if (response.status === 401) {
-      alert("Unauthorized. Please log in again.");
+      toast.error("Unauthorized. Please log in again.");
     } else if (response.status === 400) {
       setBpError("Invalid input. Please check your values.");
     }

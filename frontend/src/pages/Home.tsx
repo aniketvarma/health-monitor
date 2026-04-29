@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -39,9 +40,9 @@ export default function Home() {
         const data = await response.json();
         setMedicineList(data.medicines);
       } else if (response.status === 401) {
-        alert("Unauthorized. Please log in again.");
+        toast.error("Unauthorized. Please log in again.");
       } else if (response.status === 500) {
-        alert("Server error. Please try again later.");
+        toast.error("Server error. Please try again later.");
       }
     }
 
@@ -66,11 +67,11 @@ export default function Home() {
       setNewMedicine("");
       setDialogOpen(false);
     } else if (response.status === 401) {
-      alert("Unauthorized. Please log in again.");
+      toast.error("Unauthorized. Please log in again.");
     } else if (response.status === 400) {
-      alert("Invalid medicine input.");
+      toast.error("Invalid medicine input.");
     } else if (response.status === 500) {
-      alert("Server error. Please try again later.");
+      toast.error("Server error. Please try again later.");
     }
   }
 

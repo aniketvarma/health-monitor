@@ -296,7 +296,7 @@ app.post("/api/auth/forgot-password", async (req, res) => {
       to: userEmail,
       subject: "Reset your password",
       html: `<p>Click the link to reset your password:</p>
-         <a href="http://localhost:5173/reset-password/${token}">Reset Password</a>
+         <a href="${process.env.FRONT_END_URL}/reset-password/${token}">Reset Password</a>
          <p>This link expires in 15 minutes.</p>`,
     });
     return res

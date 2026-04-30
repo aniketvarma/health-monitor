@@ -1,3 +1,7 @@
+// load .env before anything else
+import dotenv from "dotenv";
+dotenv.config();
+
 // import pg-promise
 import pgPromise from "pg-promise";
 

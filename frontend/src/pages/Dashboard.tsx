@@ -13,14 +13,28 @@ import {
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import BottomNav from "@/components/BottomNav";
 
 export default function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   function handleLogout() {
     localStorage.removeItem("token");
     navigate("/login");
+  }
+
+  if (isMobile) {
+    return (
+      <div>
+        <main className="p-4 pb-20">
+          <Outlet />
+        </main>
+        <BottomNav />
+      </div>
+    );
   }
 
   return (
@@ -49,9 +63,9 @@ export default function Dashboard() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={location.pathname === "/dashboard/calendar"}
+                  isActive={location.pathname === "/dashboard/reminders"}
                 >
-                  <Link to="/dashboard/calendar">Calendar</Link>
+                  <Link to="/dashboard/reminders">Reminders</Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
@@ -74,7 +88,12 @@ export default function Dashboard() {
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter>
-          <Button variant="outline" size="sm" className="w-fit" onClick={handleLogout}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-fit"
+            onClick={handleLogout}
+          >
             <LogOut className="w-4 h-4 mr-2" />
             Logout
           </Button>

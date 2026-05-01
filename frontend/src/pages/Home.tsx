@@ -91,15 +91,9 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Welcome back, {username}</h1>
-        <div className="flex gap-3">
-          <Button asChild>
-            <Link to="/dashboard/log">Log Data</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/dashboard/insights">View Insights</Link>
-          </Button>
-        </div>
+        <h1 className="text-base md:text-2xl font-bold">
+          Welcome back, {username}
+        </h1>
       </div>
 
       <Card>

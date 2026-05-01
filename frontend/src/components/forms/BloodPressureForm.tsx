@@ -11,7 +11,6 @@ export default function BloodPressureForm() {
   const [systolic, setSystolic] = useState("");
   const [diastolic, setDiastolic] = useState("");
   const [pulse, setPulse] = useState("");
-  const [bpError, setBpError] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -41,11 +40,10 @@ export default function BloodPressureForm() {
       setSystolic("");
       setDiastolic("");
       setPulse("");
-      setBpError("");
     } else if (response.status === 401) {
-      toast.error("Unauthorized. Please log in again.");
+      toast.error("Unauthorized. Please log in");
     } else if (response.status === 400) {
-      setBpError("Invalid input. Please check your values.");
+      toast.error("Invalid input. Please check your values.");
     }
   }
 
@@ -88,7 +86,6 @@ export default function BloodPressureForm() {
           </form>
         </CardContent>
       </Card>
-      {bpError && <p className="text-red-500 mt-2">{bpError}</p>}
     </div>
   );
 }

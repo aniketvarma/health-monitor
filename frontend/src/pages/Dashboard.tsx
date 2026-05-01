@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNav from "@/components/BottomNav";
 
@@ -30,6 +30,9 @@ export default function Dashboard() {
     return (
       <div>
         <main className="p-4 pb-20">
+          <Link to="/dashboard/settings" className="fixed top-4 right-4 z-50 rounded-full w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center shadow-md">
+            <UserRound className="w-5 h-5" />
+          </Link>
           <Outlet />
         </main>
         <BottomNav />
@@ -100,8 +103,11 @@ export default function Dashboard() {
         </SidebarFooter>
       </Sidebar>
 
-      <main className="flex-1 p-6">
-        <SidebarTrigger className="mb-4" />
+      <main className="flex-1 p-6 pt-2">
+        <SidebarTrigger className="mb-2" />
+        <Link to="/dashboard/settings" className="fixed top-4 right-4 z-50 rounded-full w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center shadow-md">
+          <UserRound className="w-5 h-5" />
+        </Link>
         <Outlet />
       </main>
     </SidebarProvider>

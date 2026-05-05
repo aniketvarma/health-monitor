@@ -34,3 +34,14 @@ export const ResetpasswordSchema = z.object({
   newPassword: z.string(),
   token: z.string(),
 });
+
+export const reminderSchema = z.object({
+  date: z.string().min(1),
+  time: z.string().min(1),
+  message: z.string().min(1).max(500),
+});
+
+export const updateProfileFieldSchema = z.object({
+  field: z.enum(["name", "date_of_birth", "gender"]),
+  value: z.string().min(1).max(250),
+});

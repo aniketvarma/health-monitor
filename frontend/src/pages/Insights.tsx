@@ -197,7 +197,7 @@ export default function Insights() {
                     }
                     interval="preserveStartEnd"
                   />
-                  <YAxis />
+                  <YAxis domain={[0, 500]} />
                   <Tooltip
                     labelFormatter={(value) => new Date(value).toLocaleString()}
                   />
@@ -222,7 +222,7 @@ export default function Insights() {
                     }
                     interval="preserveStartEnd"
                   />
-                  <YAxis />
+                  <YAxis domain={[0, 500]} />
                   <Tooltip
                     labelFormatter={(value) => new Date(value).toLocaleString()}
                   />

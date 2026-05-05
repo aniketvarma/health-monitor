@@ -15,11 +15,11 @@ export default function BloodPressureForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const payload = {
+    const payload: { systolic: number; diastolic: number; pulse?: number } = {
       systolic: Number(systolic),
       diastolic: Number(diastolic),
-      pulse: pulse ? Number(pulse) : null,
     };
+    if (pulse) payload.pulse = Number(pulse);
 
     if (systolic === "" || diastolic === "") {
       toast.warning("Please fill blood pressure values.");

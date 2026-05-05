@@ -22,6 +22,8 @@ import {
   medicineSchema,
   ForgotPasswordSchema,
   ResetpasswordSchema,
+  reminderSchema,
+  updateProfileFieldSchema,
 } from "./schemas.js";
 
 import authenticate from "./middleware/authenticate.js";
@@ -109,7 +111,7 @@ app.post("/api/auth/login", async (req, res) => {
         role: dbuser.role,
       },
       process.env.JWT_SECRET!,
-      { expiresIn: "7d" },
+      { expiresIn: "1d" },
     );
 
     res.json({ token: token });
@@ -257,6 +259,112 @@ app.delete("/api/medicines/:id", authenticate, async (req, res) => {
       await db.none(`DELETE FROM medicines WHERE id =$1`, [medicineId]);
       res.status(200).json({ message: "Medicine Deleted" });
     }
+  } catch (error) {
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+// save a reminder
+app.post("/api/reminders", authenticate, async (req, res) => {
+  const validationResult = reminderSchema.safeParse(req.body);
+
+  if (!validationResult.success) {
+    return res
+      .status(400)
+      .json({ error: z.flattenError(validationResult.error) });
+  }
+
+  const userId = (req as any).user.id;
+  const { date, time, message } = validationResult.data;
+
+  try {
+    await db.none(
+      `INSERT INTO reminders (user_id, date, time, message) VALUES ($1, $2, $3, $4)`,
+      [userId, date, time, message],
+    );
+    res.status(201).json({ message: "Reminder saved" });
+  } catch (error) {
+    console.error("Error saving reminder:", error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+// get all reminders for the logged-in user
+app.get("/api/reminders", authenticate, async (req, res) => {
+  const userId = (req as any).user.id;
+
+  try {
+    const reminders = await db.any(
+      `SELECT id, date, time, message FROM reminders WHERE user_id = $1 ORDER BY date, time`,
+      [userId],
+    );
+    res.status(200).json({ reminders });
+  } catch (error) {
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+// delete a reminder
+app.delete("/api/reminders/:id", authenticate, async (req, res) => {
+  const userId = (req as any).user.id;
+  const reminderId = req.params.id;
+
+  try {
+    const dbResult = await db.oneOrNone(
+      `SELECT * FROM reminders WHERE id = $1 AND user_id = $2`,
+      [reminderId, userId],
+    );
+
+    if (!dbResult) {
+      res.status(404).json({ error: "Reminder not found" });
+    } else {
+      await db.none(`DELETE FROM reminders WHERE id = $1`, [reminderId]);
+      res.status(200).json({ message: "Reminder deleted" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+// get user profile
+app.get("/api/profile", authenticate, async (req, res) => {
+  const userId = (req as any).user.id;
+
+  try {
+    const profile = await db.oneOrNone(
+      `SELECT name, email, role, date_of_birth, gender FROM users WHERE id = $1`,
+      [userId],
+    );
+
+    if (!profile) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({ profile });
+  } catch (error) {
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+// update a single profile field
+app.patch("/api/profile", authenticate, async (req, res) => {
+  const validationResult = updateProfileFieldSchema.safeParse(req.body);
+
+  if (!validationResult.success) {
+    return res
+      .status(400)
+      .json({ error: z.flattenError(validationResult.error) });
+  }
+
+  const userId = (req as any).user.id;
+  const { field, value } = validationResult.data;
+
+  try {
+    await db.none(
+      `UPDATE users SET ${field} = $1, updated_at = NOW() WHERE id = $2`,
+      [value, userId],
+    );
+    res.status(200).json({ message: "Profile updated" });
   } catch (error) {
     res.status(500).json({ error: "Something went wrong" });
   }

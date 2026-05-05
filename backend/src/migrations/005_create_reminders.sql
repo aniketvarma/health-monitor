@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS reminders (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  date DATE NOT NULL,
+  time TIME NOT NULL,
+  message VARCHAR(500) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);

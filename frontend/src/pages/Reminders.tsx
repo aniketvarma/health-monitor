@@ -104,7 +104,7 @@ export default function Reminders() {
           setSelectedDate(day ?? selectedDate);
           setIsPopUpOpen(true);
         }}
-        className="w-full max-w-2xl mt-10"
+        className="w-full max-w-2xl mt-10 bg-gradient-to-r from-secondary to-accent rounded-xl p-4"
         classNames={{
           root: "w-full",
           day: "flex-1",

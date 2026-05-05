@@ -46,21 +46,13 @@ export default function Dashboard() {
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel>Menu</SidebarGroupLabel>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-2">
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
                   isActive={location.pathname === "/dashboard"}
                 >
                   <Link to="/dashboard">Home</Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === "/dashboard/profile"}
-                >
-                  <Link to="/dashboard/profile">Profile</Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
@@ -77,6 +69,14 @@ export default function Dashboard() {
                   isActive={location.pathname === "/dashboard/insights"}
                 >
                   <Link to="/dashboard/insights">Insights</Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname === "/dashboard/log"}
+                >
+                  <Link to="/dashboard/log">Log Data</Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>

@@ -1,25 +1,30 @@
-# Health Monitor
+# KinLog
 
-A shared health vault for families — one place to track medicines, BP and glucose readings, and notes for doctor appointments.
+Track your health vitals in one place. Log blood pressure, glucose levels, and medications — then see trends over time with visual charts.
 
-## Vision
+## Live App
 
-Managing a family's health information shouldn't mean scattered notes, forgotten prescriptions, and scrambled memory before a doctor's visit. Health Monitor gives families a single shared space to log and look up everything that matters: ongoing medications, vitals over time, and prep notes for upcoming appointments.
+[kinlog-app.vercel.app](https://kinlog-app.vercel.app)
 
-## Features (planned)
+## What It Does
 
-- Shared family vault with per-member profiles
-- Medication tracker (dosage, schedule, refills)
-- Vitals log — blood pressure, blood glucose, weight, etc.
-- Pre-appointment notes and questions for the doctor
-- History view to spot trends over time
+**Log vitals daily** — Record blood pressure (systolic/diastolic/pulse) and glucose readings in seconds.
 
-## Tech Stack
+**Track medications** — Keep a list of active medicines so nothing gets missed.
 
-**Frontend:** React + TypeScript + Vite
-**Backend:** Node.js + Express + TypeScript
-**Database:** SQLite (will be switched to Postgres)
+**Reminders** — Add reminders that show up on your home page so you don't forget what to measure or take.
 
-## Status
+**Trends & insights** — Interactive charts show how your readings change over days and weeks.
 
-Early development.
+## Built With
+
+- React + TypeScript frontend
+- Express + TypeScript backend
+- PostgreSQL database
+- Tailwind CSS + shadcn/ui for the interface
+- Recharts for data visualizations
+- Resend for email (password reset)
+
+## License
+
+MIT

@@ -23,9 +23,6 @@ export default function Home() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [reminders, setReminders] = useState<any[]>([]);
   const token = localStorage.getItem("token")!;
-  const jwtpayload = token.split(".")[1];
-  const decoded = atob(jwtpayload.replace(/-/g, "+").replace(/_/g, "/"));
-  const username = JSON.parse(decoded).name;
 
   useEffect(() => {
     async function fetchMedicines() {
@@ -119,7 +116,9 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">KinLog</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+          KinLog
+        </h1>
       </div>
 
       <Card>
@@ -195,7 +194,8 @@ export default function Home() {
                       {new Date(r.date).toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short",
-                      })}, {r.time}
+                      })}
+                      , {r.time}
                     </p>
                   </div>
                 </li>

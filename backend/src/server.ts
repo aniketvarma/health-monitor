@@ -7,121 +7,94 @@ import express from "express";
 // import cors
 import cors from "cors";
 
-import bcrypt from "bcrypt";
+import { OAuth2Client } from "google-auth-library";
 
-import db from "./db.js";
-
-import jwt from "jsonwebtoken";
-
-import { z } from "zod";
+import db from "./db.js"; // pg-promise database instance
+import jwt from "jsonwebtoken"; // create/verify auth tokens
+import { z } from "zod"; // input validation
 import {
-  signupSchema,
-  loginschema,
   bpReadingSchema,
   glucoseReadingSchema,
   medicineSchema,
-  ForgotPasswordSchema,
-  ResetpasswordSchema,
   reminderSchema,
   updateProfileFieldSchema,
+  googleAuthSchema,
 } from "./schemas.js";
-
-import authenticate from "./middleware/authenticate.js";
-import crypto from "crypto";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import authenticate from "./middleware/authenticate.js"; // JWT auth middleware
 
 // create the app instance
 const app = express();
 
-const allowedOrigins = [
-  "http://localhost:5173", // local dev
-  process.env.FRONT_END_URL!,
-];
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-);
+// only allow requests from our frontend
+const allowedOrigins = ["http://localhost:5173", process.env.FRONT_END_URL!];
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 
-//telling the app to use json middleware to parse incoming JSON requests
+// parse JSON request bodies
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-//signup route to handle user registration
-app.post("/api/auth/signup", async (req, res) => {
-  const { name, email, password } = req.body;
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-  // validate the request body using zod schema
-  const result = signupSchema.safeParse({ name, email, password });
+// ── AUTH ROUTES ──────────────────────────────────────────
 
-  if (!result.success) {
-    return res.status(400).json({ error: z.flattenError(result.error) });
+app.post("/api/auth/google", async (req, res) => {
+  const validationResult = googleAuthSchema.safeParse(req.body);
+
+  if (!validationResult.success) {
+    return res
+      .status(400)
+      .json({ error: z.flattenError(validationResult.error) });
   }
-
-  const passwordHash = await bcrypt.hash(password, 10);
+  // frontend sends the Google token it got from the Google login popup
+  const { token } = validationResult.data;
 
   try {
-    await db.none(
-      `INSERT INTO users (name, email, password)
-    VALUES ($1, $2, $3)`,
-      [name, email, passwordHash],
-    );
+    // verify the token with Google — throws if invalid/expired/fake
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID, // make sure token was meant for our app
+    });
 
-    res.status(201).json({ message: "Signup successful! Please log in." });
-  } catch (error: any) {
-    if (error.code === "23505") {
-      return res.status(409).json({ error: "Credential already in use" });
+    // extract user info from the verified token
+    const payload = ticket.getPayload();
+    const email = payload?.email;
+    const name = payload?.name;
+    const googleId = payload?.sub; // Google's unique user ID — never changes
+
+    try {
+      // check if this Google user already exists in our DB
+      let user = await db.oneOrNone(`SELECT * FROM users WHERE google_id=$1`, [
+        googleId,
+      ]);
+
+      // first-time Google login — create a new user
+      // RETURNING * gives back the new row so we can read user.id
+      if (!user) {
+        user = await db.one(
+          `INSERT INTO users (name, email, google_id) VALUES ($1, $2, $3) RETURNING *`,
+          [name, email, googleId],
+        );
+      }
+
+      // create our own JWT with the DB user id
+      const jwtToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
+        expiresIn: "1d",
+      });
+
+      return res.status(200).json({ token: jwtToken });
+    } catch (e) {
+      // DB error — connection failed, query error, etc.
+      res.status(500).json({ error: "Something went wrong" });
     }
-    console.error("Error during signup:", error);
-    res.status(500).json({ error: "Something went wrong" });
+  } catch (e) {
+    // Google token verification failed — invalid, expired, or tampered token
+    return res.status(401).json({ error: "Google login failed" });
   }
 });
 
-app.post("/api/auth/login", async (req, res) => {
-  const { email, password } = req.body;
+// ── BP READINGS ─────────────────────────────────────────
 
-  const user = loginschema.safeParse({ email, password });
-
-  if (!user.success) {
-    return res.status(400).json({ error: z.flattenError(user.error) });
-  }
-
-  try {
-    const dbuser = await db.oneOrNone(`SELECT * FROM users WHERE email = $1`, [
-      email,
-    ]);
-    if (dbuser === null) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const passwordMatch = await bcrypt.compare(password, dbuser.password);
-    if (!passwordMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    const token = jwt.sign(
-      {
-        id: dbuser.id,
-        name: dbuser.name,
-        email: dbuser.email,
-        role: dbuser.role,
-      },
-      process.env.JWT_SECRET!,
-      { expiresIn: "1d" },
-    );
-
-    res.json({ token: token });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ error: "Something went wrong" });
-  }
-});
-
-// route for bp readings logging
 app.post("/api/bp-readings", authenticate, async (req, res) => {
   const validationResult = bpReadingSchema.safeParse(req.body);
 
@@ -149,8 +122,9 @@ app.post("/api/bp-readings", authenticate, async (req, res) => {
   }
 });
 
+// ── GLUCOSE READINGS ────────────────────────────────────
+
 app.post("/api/glucose-readings", authenticate, async (req, res) => {
-  // validate the request body using zod schema
   const validationResult = glucoseReadingSchema.safeParse(req.body);
 
   if (!validationResult.success) {
@@ -159,13 +133,9 @@ app.post("/api/glucose-readings", authenticate, async (req, res) => {
       .json({ error: z.flattenError(validationResult.error) });
   }
 
-  // extract validated data
   const { reading, type } = validationResult.data;
-
-  //get user id from the authenticated request
   const userId = (req as any).user.id;
 
-  // insert the glucose reading into the database and handle potential errors
   try {
     await db.none(
       `INSERT INTO glucose_readings (user_id, reading, type) VALUES ($1, $2, $3)`,
@@ -206,6 +176,8 @@ app.get("/api/glucose-readings", authenticate, async (req, res) => {
     res.status(500).json({ error: error });
   }
 });
+
+// ── MEDICINES ───────────────────────────────────────────
 
 app.post("/api/medicines", authenticate, async (req, res) => {
   const validationResult = medicineSchema.safeParse(req.body);
@@ -264,7 +236,8 @@ app.delete("/api/medicines/:id", authenticate, async (req, res) => {
   }
 });
 
-// save a reminder
+// ── REMINDERS ───────────────────────────────────────────
+
 app.post("/api/reminders", authenticate, async (req, res) => {
   const validationResult = reminderSchema.safeParse(req.body);
 
@@ -289,7 +262,6 @@ app.post("/api/reminders", authenticate, async (req, res) => {
   }
 });
 
-// get all reminders for the logged-in user
 app.get("/api/reminders", authenticate, async (req, res) => {
   const userId = (req as any).user.id;
 
@@ -304,7 +276,6 @@ app.get("/api/reminders", authenticate, async (req, res) => {
   }
 });
 
-// delete a reminder
 app.delete("/api/reminders/:id", authenticate, async (req, res) => {
   const userId = (req as any).user.id;
   const reminderId = req.params.id;
@@ -326,7 +297,8 @@ app.delete("/api/reminders/:id", authenticate, async (req, res) => {
   }
 });
 
-// get user profile
+// ── PROFILE ─────────────────────────────────────────────
+
 app.get("/api/profile", authenticate, async (req, res) => {
   const userId = (req as any).user.id;
 
@@ -346,7 +318,6 @@ app.get("/api/profile", authenticate, async (req, res) => {
   }
 });
 
-// update a single profile field
 app.patch("/api/profile", authenticate, async (req, res) => {
   const validationResult = updateProfileFieldSchema.safeParse(req.body);
 
@@ -370,85 +341,8 @@ app.patch("/api/profile", authenticate, async (req, res) => {
   }
 });
 
-app.post("/api/auth/forgot-password", async (req, res) => {
-  const validationResult = ForgotPasswordSchema.safeParse(req.body);
+// ── START SERVER ────────────────────────────────────────
 
-  if (!validationResult.success) {
-    return res.status(400).json({ error: "invalid username" });
-  }
-
-  const userEmail = validationResult.data.email;
-
-  const user = await db.oneOrNone(`SELECT * FROM users WHERE email= $1`, [
-    userEmail,
-  ]);
-
-  if (!user) {
-    return res
-      .status(200)
-      .json({ message: "If this email exists, a reset link has been sent." });
-  }
-
-  const token = crypto.randomBytes(32).toString("hex");
-
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-
-  try {
-    await db.none(
-      `INSERT INTO password_reset_tokens (email, token, expires_at) VALUES ($1, $2, $3)`,
-      [userEmail, token, expiresAt],
-    );
-
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: userEmail,
-      subject: "Reset your password",
-      html: `<p>Click the link to reset your password:</p>
-         <a href="${process.env.FRONT_END_URL}/reset-password/${token}">Reset Password</a>
-         <p>This link expires in 15 minutes.</p>`,
-    });
-    return res
-      .status(200)
-      .json({ message: "If this email exists, a reset link has been sent." });
-  } catch (error) {
-    res.status(500).json({ error: "something went wrong" });
-  }
-});
-
-app.post("/api/auth/reset-password", async (req, res) => {
-  const validationResult = ResetpasswordSchema.safeParse(req.body);
-
-  if (!validationResult.success) {
-    return res.status(400).json({ error: "inavlid input" });
-  }
-
-  const { newPassword, token } = validationResult.data;
-
-  try {
-    const tokenRow = await db.oneOrNone(
-      `SELECT * FROM password_reset_tokens WHERE token=$1 AND expires_at > NOW()`,
-      [token],
-    );
-
-    if (!tokenRow) {
-      return res.status(400).json({ error: "Invalid or expired reset link." });
-    }
-
-    const newHashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await db.none(`UPDATE users SET password = $1 WHERE email=$2`, [
-      newHashedPassword,
-      tokenRow.email,
-    ]);
-
-    await db.none(`DELETE FROM password_reset_tokens WHERE token=$1`, [token]);
-
-    res.status(200).json({ message: "password reset successfull" });
-  } catch (error) {
-    res.status(500).json({ error: "Something went wrong" });
-  }
-});
-// start the server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

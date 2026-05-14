@@ -1,4 +1,3 @@
-import SignUp from "./pages/SignUp";
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -9,7 +8,7 @@ import Insights from "./pages/Insights";
 import Settings from "./pages/Settings";
 import LogData from "./pages/LogData";
 import ProtectedRoute from "./pages/ProtectedRoute";
-import ResetPassword from "./pages/ResetPassword";
+
 import { Toaster } from "@/components/ui/sonner";
 
 function App() {
@@ -19,8 +18,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />}>
             <Route index element={<Home />} />

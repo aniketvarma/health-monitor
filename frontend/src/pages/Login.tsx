@@ -31,16 +31,6 @@ export default function Login() {
     }
   }
 
-  // TODO: Anike — implement handleSendCode:
-  //   1. setIsSending(true)
-  //   2. POST to `${API}/api/auth/request-otp` with body { email }
-  //   3. if response.ok:
-  //        sessionStorage.setItem("otp-email", email)
-  //        navigate("/verify-otp")
-  //      else:
-  //        toast.error with the error from response.json().error
-  //        (handle Zod object shape — fall back to "Couldn't send code")
-  //   4. setIsSending(false) in finally
   async function handleSendCode() {
     setIsSending(true);
     try {
@@ -119,7 +109,6 @@ export default function Login() {
             // TODO: Anike — disabled={isSending || !email}
             disabled={isSending || !email}
           >
-            {/* TODO: Anike — show "Sending..." when isSending, else "Send code" */}
             {isSending ? "Sending..." : "Send code"}
           </Button>
         </CardContent>

@@ -14,13 +14,6 @@ const API = import.meta.env.VITE_API_URL;
 export default function VerifyOtp() {
   const navigate = useNavigate();
 
-  // TODO: Anike — declare these pieces of state:
-  //   email          — string, read from sessionStorage on mount; "" initially
-  //   code           — string, the 6-digit value typed into <InputOTP>
-  //   isVerifying    — boolean, true while POST /verify-otp is in flight
-  //   resendCooldown — number, seconds remaining before "Resend code" is enabled (start at 60)
-  //   isResending    — boolean, true while POST /request-otp is in flight
-
   const [email, setEmail] = useState("");
 
   const [code, setCode] = useState("");
@@ -29,11 +22,6 @@ export default function VerifyOtp() {
 
   const [resendCooldown, setResendCooldown] = useState(60);
   const [isResending, setIsResending] = useState(false);
-
-  // TODO: Anike — useEffect on mount:
-  //   1. const stored = sessionStorage.getItem("otp-email")
-  //   2. if (!stored) { navigate("/login"); return; }
-  //   3. setEmail(stored)
 
   useEffect(() => {
     const stored = sessionStorage.getItem("otp-email");
@@ -44,9 +32,6 @@ export default function VerifyOtp() {
 
     setEmail(stored);
   }, []);
-
-  // TODO: Anike — useEffect that ticks resendCooldown down by 1 every second
-  //   until it reaches 0. Use setInterval + cleanup (clearInterval in return).
 
   useEffect(() => {
     if (resendCooldown <= 0) {
@@ -59,19 +44,6 @@ export default function VerifyOtp() {
     return () => clearInterval(id);
   }, [resendCooldown]);
 
-  // TODO: Anike — implement handleVerify:
-  //   1. setIsVerifying(true)
-  //   2. POST `${API}/api/auth/verify-otp` with body { email, otp: code }
-  //      (the API field is `otp`; the local state name `code` stays for clarity)
-  //   3. if response.ok:
-  //        const { token, needsOnboarding } = await res.json()
-  //        localStorage.setItem("token", token)
-  //        sessionStorage.removeItem("otp-email")
-  //        navigate(needsOnboarding ? "/welcome" : "/dashboard")
-  //      else:
-  //        parse body — same shape-check pattern as Login.tsx (string vs Zod object)
-  //        toast.error with the message
-  //   4. setIsVerifying(false) in finally
   async function handleVerify() {
     setIsVerifying(true);
     try {
@@ -112,14 +84,6 @@ export default function VerifyOtp() {
     }
   }
 
-  // TODO: Anike — implement handleResend:
-  //   1. setIsResending(true)
-  //   2. POST `${API}/api/auth/request-otp` with body { email }
-  //   3. if response.ok:
-  //        toast.success("Code resent")
-  //        setResendCooldown(60)
-  //      else: toast.error(...)
-  //   4. setIsResending(false) in finally
   async function handleResend() {
     setIsResending(true);
 
@@ -175,12 +139,7 @@ export default function VerifyOtp() {
           </p>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 items-center">
-          <InputOTP
-            maxLength={6}
-            // TODO: Anike — value={code} onChange={setCode}
-            value={code}
-            onChange={setCode}
-          >
+          <InputOTP maxLength={6} value={code} onChange={setCode}>
             <InputOTPGroup>
               <InputOTPSlot index={0} />
               <InputOTPSlot index={1} />
@@ -194,10 +153,8 @@ export default function VerifyOtp() {
           <Button
             className="w-full"
             onClick={handleVerify}
-            // TODO: Anike — disabled={isVerifying || code.length !== 6}
             disabled={isVerifying || code.length !== 6}
           >
-            {/* TODO: Anike — show "Verifying..." when isVerifying, else "Verify" */}
             {isVerifying ? "Verifying" : "Verify"}
           </Button>
 
@@ -205,14 +162,8 @@ export default function VerifyOtp() {
             type="button"
             className="text-sm text-blue-600 hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
             onClick={handleResend}
-            // TODO: Anike — disabled={resendCooldown > 0 || isResending}
             disabled={resendCooldown > 0 || isResending}
           >
-            {/* TODO: Anike —
-                 if resendCooldown > 0: `Resend code in ${resendCooldown}s`
-                 else if isResending:   "Resending..."
-                 else:                  "Resend code"
-            */}
             {resendCooldown > 0
               ? `Resend code in ${resendCooldown}s`
               : isResending

@@ -15,11 +15,30 @@ import { Button } from "@/components/ui/button";
 import { LogOut, UserRound } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNav from "@/components/BottomNav";
+import { useEffect } from "react";
 
 export default function Dashboard() {
   const location = useLocation();
-  const navigate = useNavigate();
+
   const isMobile = useIsMobile();
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    async function checkOnboarded() {
+      const token = localStorage.getItem("token");
+      if (!token) return; // ProtectedRoute will catch this separately
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return; // network/server hiccup — leave the user alone
+      const { profile } = await res.json();
+      if (profile.name === null) {
+        navigate("/welcome"); // unfinished onboarding — send them back
+      }
+    }
+    checkOnboarded();
+  }, [navigate]);
 
   function handleLogout() {
     localStorage.removeItem("token");
@@ -30,7 +49,10 @@ export default function Dashboard() {
     return (
       <div>
         <main className="p-4 pb-20">
-          <Link to="/dashboard/settings" className="fixed top-4 right-4 z-50 rounded-full w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center shadow-md">
+          <Link
+            to="/dashboard/settings"
+            className="fixed top-4 right-4 z-50 rounded-full w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center shadow-md"
+          >
             <UserRound className="w-5 h-5" />
           </Link>
           <Outlet />
@@ -105,7 +127,10 @@ export default function Dashboard() {
 
       <main className="flex-1 p-6 pt-2">
         <SidebarTrigger className="mb-2" />
-        <Link to="/dashboard/settings" className="fixed top-4 right-4 z-50 rounded-full w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center shadow-md">
+        <Link
+          to="/dashboard/settings"
+          className="fixed top-4 right-4 z-50 rounded-full w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center shadow-md"
+        >
           <UserRound className="w-5 h-5" />
         </Link>
         <Outlet />

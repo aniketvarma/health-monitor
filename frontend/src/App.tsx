@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
+import VerifyOtp from "./pages/VerifyOtp";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
@@ -10,6 +11,7 @@ import LogData from "./pages/LogData";
 import ProtectedRoute from "./pages/ProtectedRoute";
 
 import { Toaster } from "@/components/ui/sonner";
+import Welcome from "./pages/Welcome";
 
 function App() {
   return (
@@ -18,8 +20,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
-
+        <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route element={<ProtectedRoute />}>
+          <Route path="/welcome" element={<Welcome />} />
           <Route path="/dashboard" element={<Dashboard />}>
             <Route index element={<Home />} />
             <Route path="profile" element={<Profile />} />

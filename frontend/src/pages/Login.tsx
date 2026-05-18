@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -8,6 +10,10 @@ const API = import.meta.env.VITE_API_URL;
 
 export default function Login() {
   const navigate = useNavigate();
+
+  // TODO: Anike — add useState for `email` (string) and `isSending` (boolean)
+  const [email, setEmail] = useState<string>("");
+  const [isSending, setIsSending] = useState<boolean>(false);
 
   async function handleGoogle(credentialResponse: any) {
     const res = await fetch(`${API}/api/auth/google`, {
@@ -22,6 +28,55 @@ export default function Login() {
       navigate("/dashboard");
     } else {
       toast.error("Google Login failed");
+    }
+  }
+
+  // TODO: Anike — implement handleSendCode:
+  //   1. setIsSending(true)
+  //   2. POST to `${API}/api/auth/request-otp` with body { email }
+  //   3. if response.ok:
+  //        sessionStorage.setItem("otp-email", email)
+  //        navigate("/verify-otp")
+  //      else:
+  //        toast.error with the error from response.json().error
+  //        (handle Zod object shape — fall back to "Couldn't send code")
+  //   4. setIsSending(false) in finally
+  async function handleSendCode() {
+    setIsSending(true);
+    try {
+      const response = await fetch(`${API}/api/auth/request-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: email }),
+      });
+
+      if (response.ok) {
+        sessionStorage.setItem("otp-email", email);
+        navigate("/verify-otp");
+        return;
+      }
+
+      const body = await response.json();
+
+      if (response.status === 429) {
+        toast.error(body.error);
+      } else if (response.status === 400) {
+        const msg =
+          typeof body.error === "string"
+            ? body.error
+            : "Please enter a valid email address.";
+        toast.error(msg);
+      } else {
+        toast.error("something went wrong");
+      }
+    } catch (e) {
+      toast.error(
+        "Couldn't reach the server. Check your connection and try again.",
+      );
+    } finally {
+      setIsSending(false);
     }
   }
 
@@ -42,8 +97,30 @@ export default function Login() {
             onError={() => toast.error("Google login failed")}
           />
 
-          <Button className="w-full" variant="outline">
-            Continue with Email
+          {/* OR separator */}
+          <div className="flex items-center gap-2 my-1 text-xs text-muted-foreground">
+            <div className="flex-1 h-px bg-border" />
+            OR
+            <div className="flex-1 h-px bg-border" />
+          </div>
+
+          <Input
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+            }}
+          />
+
+          <Button
+            className="w-full"
+            onClick={handleSendCode}
+            // TODO: Anike — disabled={isSending || !email}
+            disabled={isSending || !email}
+          >
+            {/* TODO: Anike — show "Sending..." when isSending, else "Send code" */}
+            {isSending ? "Sending..." : "Send code"}
           </Button>
         </CardContent>
       </Card>

@@ -1,4 +1,4 @@
-import { email, z } from "zod";
+import { z } from "zod";
 
 export const bpReadingSchema = z.object({
   systolic: z.number().min(70).max(250),

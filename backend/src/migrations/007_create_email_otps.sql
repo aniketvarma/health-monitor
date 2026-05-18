@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS email_otps(
+
+    email VARCHAR(255) PRIMARY KEY,
+
+    code_hash VARCHAR(255) NOT NULL,
+
+    attempts INT NOT NULL DEFAULT 0,
+
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    expires_at TIMESTAMP NOT NULL DEFAULT(NOW()+ INTERVAL '10 minutes')
+
+);
+
+
+
+ALTER TABLE users ALTER COLUMN name DROP NOT NULL

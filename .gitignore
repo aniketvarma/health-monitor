@@ -24,6 +24,7 @@ dist-ssr
 
 # Claude Code
 .claude/
+.superpowers/
 
 # Editor directories and files
 .vscode/*
@@ -35,3 +36,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+docs

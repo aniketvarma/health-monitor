@@ -1,16 +1,5 @@
 import { z } from "zod";
 
-export const signupSchema = z.object({
-  name: z.string().min(1).max(250),
-  email: z.email(),
-  password: z.string().min(6).max(100),
-});
-
-export const loginschema = z.object({
-  email: z.email(),
-  password: z.string().min(6).max(100),
-});
-
 export const bpReadingSchema = z.object({
   systolic: z.number().min(70).max(250),
   diastolic: z.number().min(40).max(150),
@@ -26,15 +15,6 @@ export const medicineSchema = z.object({
   medicine: z.string().min(1).max(250),
 });
 
-export const ForgotPasswordSchema = z.object({
-  email: z.email(),
-});
-
-export const ResetpasswordSchema = z.object({
-  newPassword: z.string(),
-  token: z.string(),
-});
-
 export const reminderSchema = z.object({
   date: z.string().min(1),
   time: z.string().min(1),
@@ -44,4 +24,17 @@ export const reminderSchema = z.object({
 export const updateProfileFieldSchema = z.object({
   field: z.enum(["name", "date_of_birth", "gender"]),
   value: z.string().min(1).max(250),
+});
+
+export const googleAuthSchema = z.object({
+  token: z.string().min(1),
+});
+
+export const requestOtpSchema = z.object({
+  email: z.email().max(255),
+});
+
+export const verifyOtpSchema = z.object({
+  email: z.email().max(255),
+  otp: z.string().regex(/^\d{6}$/),
 });

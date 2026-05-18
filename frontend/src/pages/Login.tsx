@@ -1,67 +1,82 @@
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const API = import.meta.env.VITE_API_URL;
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const [emailForPasswordReset, setemailForPasswordReset] = useState("");
-  const [resetDialog, setResetDialog] = useState(false);
 
-  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const payload = { email, password };
+  // TODO: Anike — add useState for `email` (string) and `isSending` (boolean)
+  const [email, setEmail] = useState<string>("");
+  const [isSending, setIsSending] = useState<boolean>(false);
 
-    const response = await fetch(`${API}/api/auth/login`, {
+  async function handleGoogle(credentialResponse: any) {
+    const res = await fetch(`${API}/api/auth/google`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: credentialResponse.credential }),
     });
-    if (response.ok) {
-      const data = await response.json();
+
+    if (res.ok) {
+      const data = await res.json();
       localStorage.setItem("token", data.token);
       navigate("/dashboard");
-    } else if (response.status === 400) {
-      toast.error("Please enter a valid email and password");
-    } else if (response.status === 401) {
-      toast.error("Invalid credentials");
     } else {
-      toast.error("Something went wrong. Try again.");
+      toast.error("Google Login failed");
     }
   }
 
-  async function handleForgetPassword(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const response = await fetch(`${API}/api/auth/forgot-password`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email: emailForPasswordReset }),
-    });
+  // TODO: Anike — implement handleSendCode:
+  //   1. setIsSending(true)
+  //   2. POST to `${API}/api/auth/request-otp` with body { email }
+  //   3. if response.ok:
+  //        sessionStorage.setItem("otp-email", email)
+  //        navigate("/verify-otp")
+  //      else:
+  //        toast.error with the error from response.json().error
+  //        (handle Zod object shape — fall back to "Couldn't send code")
+  //   4. setIsSending(false) in finally
+  async function handleSendCode() {
+    setIsSending(true);
+    try {
+      const response = await fetch(`${API}/api/auth/request-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: email }),
+      });
 
-    if (response.ok) {
-      setResetDialog(false);
-      toast.success("If this email exists, a reset link has been sent.");
-    } else {
-      toast.success("Something went wrong. Please try again.");
+      if (response.ok) {
+        sessionStorage.setItem("otp-email", email);
+        navigate("/verify-otp");
+        return;
+      }
+
+      const body = await response.json();
+
+      if (response.status === 429) {
+        toast.error(body.error);
+      } else if (response.status === 400) {
+        const msg =
+          typeof body.error === "string"
+            ? body.error
+            : "Please enter a valid email address.";
+        toast.error(msg);
+      } else {
+        toast.error("something went wrong");
+      }
+    } catch (e) {
+      toast.error(
+        "Couldn't reach the server. Check your connection and try again.",
+      );
+    } finally {
+      setIsSending(false);
     }
   }
 
@@ -76,62 +91,37 @@ export default function Login() {
             Sign in to your account
           </p>
         </CardHeader>
-        <CardContent>
-          <form className="flex flex-col gap-4" onSubmit={handleLogin}>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={email}
-                placeholder="Email"
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                }}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                placeholder="Password"
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                }}
-              />
-            </div>
-            <Button type="submit">Login</Button>
-          </form>
-          <p className="text-black-500 mt-4">
-            Don't have an account? <Link to="/signup">Sign up</Link>
-          </p>
-          <Dialog open={resetDialog} onOpenChange={setResetDialog}>
-            <DialogTrigger className="text-sm text-blue-500 underline cursor-pointer">
-              Forgot password?
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Reset Password</DialogTitle>
-              </DialogHeader>
-              <form
-                className="flex flex-col gap-4"
-                onSubmit={handleForgetPassword}
-              >
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="reset-email">
-                    Enter email associated with your account
-                  </Label>
-                  <Input
-                    id="reset-email"
-                    value={emailForPasswordReset}
-                    onChange={(e) => setemailForPasswordReset(e.target.value)}
-                  />
-                </div>
-                <Button type="submit">Submit</Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+        <CardContent className="flex flex-col gap-3">
+          <GoogleLogin
+            onSuccess={handleGoogle}
+            onError={() => toast.error("Google login failed")}
+          />
+
+          {/* OR separator */}
+          <div className="flex items-center gap-2 my-1 text-xs text-muted-foreground">
+            <div className="flex-1 h-px bg-border" />
+            OR
+            <div className="flex-1 h-px bg-border" />
+          </div>
+
+          <Input
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+            }}
+          />
+
+          <Button
+            className="w-full"
+            onClick={handleSendCode}
+            // TODO: Anike — disabled={isSending || !email}
+            disabled={isSending || !email}
+          >
+            {/* TODO: Anike — show "Sending..." when isSending, else "Send code" */}
+            {isSending ? "Sending..." : "Send code"}
+          </Button>
         </CardContent>
       </Card>
     </div>

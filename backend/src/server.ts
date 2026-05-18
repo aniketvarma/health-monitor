@@ -21,7 +21,6 @@ import rateLimit from "express-rate-limit";
 import bcrypt from "bcrypt";
 import { randomInt } from "crypto";
 import { sendOtpEmail } from "./utils/email.js";
-import { error } from "console";
 
 // create the app instance
 const app = express();

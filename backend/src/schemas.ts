@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { email, z } from "zod";
 
 export const bpReadingSchema = z.object({
   systolic: z.number().min(70).max(250),
@@ -28,4 +28,13 @@ export const updateProfileFieldSchema = z.object({
 
 export const googleAuthSchema = z.object({
   token: z.string().min(1),
+});
+
+export const requestOtpSchema = z.object({
+  email: z.email().max(255),
+});
+
+export const verifyOtpSchema = z.object({
+  email: z.email().max(255),
+  otp: z.string().regex(/^\d{6}$/),
 });

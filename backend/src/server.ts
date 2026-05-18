@@ -1,14 +1,8 @@
 // load .env before anything else
-import dotenv from "dotenv";
-dotenv.config();
-
-// import express
+import "dotenv/config";
 import express from "express";
-// import cors
 import cors from "cors";
-
 import { OAuth2Client } from "google-auth-library";
-
 import db from "./db.js"; // pg-promise database instance
 import jwt from "jsonwebtoken"; // create/verify auth tokens
 import { z } from "zod"; // input validation
@@ -19,11 +13,19 @@ import {
   reminderSchema,
   updateProfileFieldSchema,
   googleAuthSchema,
+  requestOtpSchema,
+  verifyOtpSchema,
 } from "./schemas.js";
 import authenticate from "./middleware/authenticate.js"; // JWT auth middleware
+import rateLimit from "express-rate-limit";
+import bcrypt from "bcrypt";
+import { randomInt } from "crypto";
+import { sendOtpEmail } from "./utils/email.js";
+import { error } from "console";
 
 // create the app instance
 const app = express();
+app.set("trust proxy", 1);
 
 // only allow requests from our frontend
 const allowedOrigins = ["http://localhost:5173", process.env.FRONT_END_URL!];
@@ -36,7 +38,37 @@ const PORT = process.env.PORT || 3000;
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// ── AUTH ROUTES ──────────────────────────────────────────
+// ─────RATE LIMITERS(OTP)───────────────────────────
+
+const requestOtpEmailLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 1,
+  keyGenerator: (req) => req.body?.email ?? "missing-email",
+  message: { error: "Wait a moment before requesting another code" },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // if the route ends with status >= 400 (validation fail, DB error, email send fail),
+  // the library decrements the counter so the user isn't penalized for a failed attempt
+  skipFailedRequests: true,
+});
+
+const requestOtpIpLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 10,
+  message: { error: "Too many requests, slow down" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const verifyOtpIpLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 20,
+  message: { error: "Too many verification attempts, slow down" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ── AUTH ROUTE LOGIN VIA GOOGLE ──────────────────────────────────────────
 
 app.post("/api/auth/google", async (req, res) => {
   const validationResult = googleAuthSchema.safeParse(req.body);
@@ -90,6 +122,116 @@ app.post("/api/auth/google", async (req, res) => {
   } catch (e) {
     // Google token verification failed — invalid, expired, or tampered token
     return res.status(401).json({ error: "Google login failed" });
+  }
+});
+
+// ─── AUTH ROUTE FOR LOGIN USING EMAIL OTP ───────────────
+
+app.post(
+  "/api/auth/request-otp",
+  requestOtpIpLimiter,
+  requestOtpEmailLimiter,
+  async (req, res) => {
+    const validationResult = requestOtpSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
+      return res
+        .status(400)
+        .json({ error: z.flattenError(validationResult.error) });
+    }
+
+    const { email } = validationResult.data;
+    try {
+      const code = String(randomInt(100000, 1000000));
+      const codeHash = await bcrypt.hash(code, 10);
+
+      await db.none(
+        `INSERT INTO email_otps (email, code_hash) VALUES ($1, $2)
+    ON CONFLICT (email) DO UPDATE
+    SET code_hash = EXCLUDED.code_hash,
+    expires_at = EXCLUDED.expires_at,
+    attempts   = EXCLUDED.attempts,
+    created_at = EXCLUDED.created_at`,
+        [email, codeHash],
+      );
+
+      await sendOtpEmail(email, code);
+
+      return res.status(200).json({ message: "Code sent" });
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json({ error: "Couldn't send code, try again" });
+    }
+  },
+);
+
+app.post("/api/auth/verify-otp", verifyOtpIpLimiter, async (req, res) => {
+  const validationResult = verifyOtpSchema.safeParse(req.body);
+  if (!validationResult.success) {
+    return res
+      .status(400)
+      .json({ error: z.flattenError(validationResult.error) });
+  }
+
+  const { email, otp } = validationResult.data;
+
+  try {
+    const emailOtpRow = await db.oneOrNone(
+      `Select * FROM email_otps WHERE email=$1`,
+      [email],
+    );
+    if (!emailOtpRow) {
+      return res
+        .status(400)
+        .json({ error: "No code requested for this email" });
+    }
+
+    if (new Date() > new Date(emailOtpRow.expires_at)) {
+      await db.none(`DELETE FROM email_otps WHERE email =$1`, [email]);
+      return res
+        .status(400)
+        .json({ error: "Code expired , request a fresh code" });
+    }
+
+    if (emailOtpRow.attempts >= 5) {
+      await db.none(`DELETE FROM email_otps WHERE email =$1`, [email]);
+      return res
+        .status(400)
+        .json({ error: "Too many wrong tries , request a new one" });
+    }
+
+    const ok = await bcrypt.compare(otp, emailOtpRow.code_hash);
+
+    if (!ok) {
+      await db.none(
+        `UPDATE email_otps SET attempts = attempts + 1 WHERE email = $1`,
+        [email],
+      );
+      return res.status(400).json({ error: "Wrong Code" });
+    }
+
+    await db.none(`DELETE FROM email_otps WHERE email=$1`, [email]);
+
+    let user = await db.oneOrNone(`SELECT * FROM users WHERE email=$1`, [
+      email,
+    ]);
+
+    if (!user) {
+      user = await db.one(`INSERT INTO users (email) VALUES ($1) RETURNING *`, [
+        email,
+      ]);
+    }
+
+    const jwtToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
+      expiresIn: "1d",
+    });
+
+    return res
+      .status(200)
+      .json({ token: jwtToken, needsOnboarding: user.name === null });
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({ error: "Something went wrong" });
   }
 });
 

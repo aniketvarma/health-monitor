@@ -8,22 +8,42 @@ Track your health vitals in one place. Log blood pressure, glucose levels, and m
 
 ## What It Does
 
-**Log vitals daily** — Record blood pressure (systolic/diastolic/pulse) and glucose readings in seconds.
+**Sign in** — Continue with Google, or request a 6-digit code over email. _(Note: email OTP login does **not** work on the live deployment — Render's free tier blocks outbound SMTP, so Gmail can't send the code. Google sign-in works as usual.)_
+
+**Log vitals daily** — Record blood pressure (systolic / diastolic / pulse) and glucose readings in seconds.
 
 **Track medications** — Keep a list of active medicines so nothing gets missed.
 
-**Reminders** — Add reminders that show up on your home page so you don't forget what to measure or take.
+**Reminders** — Add date/time reminders that show up on your home page so you don't forget what to measure or take.
 
 **Trends & insights** — Interactive charts show how your readings change over days and weeks.
 
 ## Built With
 
-- React + TypeScript frontend
-- Express + TypeScript backend
-- PostgreSQL database
-- Tailwind CSS + shadcn/ui for the interface
+**Frontend**
+
+- React 19 + TypeScript + Vite
+- React Router for routing
+- Tailwind CSS v4 + shadcn/ui (Radix primitives) for the interface
 - Recharts for data visualizations
-- Resend for email (password reset)
+- Framer Motion for animations, Sonner for toasts, Lucide for icons
+- `@react-oauth/google` for Google sign-in, `input-otp` for the OTP field
+
+**Backend**
+
+- Express 5 + TypeScript (tsx in dev)
+- PostgreSQL via `pg-promise`
+- JWT auth (`jsonwebtoken`) with a custom `authenticate` middleware
+- Zod for request validation
+- `google-auth-library` to verify Google ID tokens
+- Nodemailer (Gmail SMTP) to send OTP codes, `bcrypt` to hash them
+- `express-rate-limit` to throttle OTP requests per email and per IP
+
+**Hosting**
+
+- Frontend on Vercel
+- Backend on Render
+- Postgres on Neon
 
 ## License
 
